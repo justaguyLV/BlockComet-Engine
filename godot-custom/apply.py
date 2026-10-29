@@ -44,6 +44,16 @@ edit(S, '"interface/theme/corner_radius", 4,', '"interface/theme/corner_radius",
 # ---- layout: "Project" panel at the bottom -----------------------------------------------------------------------------------------
 edit("editor/docks/filesystem_dock.cpp", "set_default_slot(EditorDock::DOCK_SLOT_LEFT_BR);",
      "set_default_slot(EditorDock::DOCK_SLOT_BOTTOM);")
+# The editor adds the file system dock before it creates and registers the bottom panel. A dock whose slot is the bottom
+# panel must be added after it, or the editor crashes at start (null bottom slot). The tab order stays: Project first.
+edit("editor/editor_node.cpp",
+     "\teditor_dock_manager->add_dock(filesystem_dock);\n\n\tmemnew(InspectorDock(editor_data));",
+     "\n\tmemnew(InspectorDock(editor_data));")
+edit("editor/editor_node.cpp",
+     "\tcenter_split->set_dragger_visibility(SplitContainer::DRAGGER_HIDDEN);\n\n\tlog = memnew(EditorLog);",
+     "\tcenter_split->set_dragger_visibility(SplitContainer::DRAGGER_HIDDEN);\n\n"
+     "\t// BlockComet: the Project dock lives in the bottom panel, so it is added once that panel exists.\n"
+     "\teditor_dock_manager->add_dock(filesystem_dock);\n\n\tlog = memnew(EditorLog);")
 
 # ---- branding images -------------------------------------------------------------------------------------------------------------------
 shutil.copy(os.path.join(assets, "splash.png"), os.path.join(root, "main", "splash.png"))

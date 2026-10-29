@@ -54,7 +54,7 @@ jobs:
         working-directory: godot
         run: |
           bash ../godot-custom/run-logged.sh "scons editor" scons platform=linuxbsd target=editor arch=x86_64 \
-            scu_build=yes lto=none debug_symbols=no tests=no dev_mode=no wayland=no speechd=no dbus=no -j"$(nproc)"
+            scu_build=yes lto=none debug_symbols=yes tests=no dev_mode=no wayland=no speechd=no dbus=no -j"$(nproc)"
           ls -l bin
 
       - name: Screenshots in a virtual screen
@@ -64,6 +64,7 @@ jobs:
         run: |
           mkdir -p out
           cp godot/bin/godot.linuxbsd.editor.x86_64 out/BlockCometEngine.linux.x86_64
+          strip out/BlockCometEngine.linux.x86_64
           chmod +x out/BlockCometEngine.linux.x86_64
           (cd out && zip -q BlockCometEngine-linux-x86_64.zip BlockCometEngine.linux.x86_64 && rm BlockCometEngine.linux.x86_64)
           ls -l out shots

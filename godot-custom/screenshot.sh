@@ -25,5 +25,6 @@ sleep 25
 import -window root "$OUT/03-editor-later.png"
 kill "$PID" 2>/dev/null
 kill "$XPID" 2>/dev/null
+echo "---- editor.log (tail) ----"; tail -n 60 "$OUT/editor.log"
 ls -l "$OUT"
 exit 0
