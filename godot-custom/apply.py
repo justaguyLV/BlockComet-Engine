@@ -72,7 +72,7 @@ edit(N, "\ttitle_bar->add_child(project_run_bar);\n",
 # the Project / Console panel is open from the first start
 edit(N, "\t\t\tbottom_panel->load_layout_from_config(default_layout, EDITOR_NODE_CONFIG_SECTION);\n",
      "\t\t\tbottom_panel->load_layout_from_config(default_layout, EDITOR_NODE_CONFIG_SECTION);\n"
-     "\t\t\tbottom_panel->make_item_visible(filesystem_dock);\n")
+     "\t\t\tbottom_panel->make_item_visible(FileSystemDock::get_singleton());\n")
 # names of the panels
 edit("editor/docks/scene_tree_dock.cpp", 'set_name(TTRC("Scene"));', 'set_name(TTRC("Hierarchy"));')
 edit("editor/docks/filesystem_dock.cpp", 'set_name(TTRC("FileSystem"));', 'set_name(TTRC("Project"));')
