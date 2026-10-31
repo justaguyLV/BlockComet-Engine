@@ -5,8 +5,8 @@ BlockComet Engine = Godot (MIT) with a different look and layout:
   * name and branding: window/project-manager title, splash, application icon, logos
   * theme: dark grey panels with a blue selection, thin borders, small corner radius, compact spacing (the defaults of a
     fresh editor; the user can still change everything in Editor Settings)
-  * layout: the file system dock moves to the bottom next to Output and the debugger, as the "Project" panel of other
-    engines; scene tree on the left, inspector on the right.
+  * layout: Hierarchy (scene tree) on the left, Inspector on the right, Project and Console in an open bottom panel; the
+    2D / 3D / Script / Game buttons are a tab strip above the viewport and Play / Pause / Stop are the centre of the title bar.
 Every replacement asserts that the text it changes is really there, so a different Godot version fails loudly.
 """
 import os
@@ -54,6 +54,32 @@ edit("editor/editor_node.cpp",
      "\tcenter_split->set_dragger_visibility(SplitContainer::DRAGGER_HIDDEN);\n\n"
      "\t// BlockComet: the Project dock lives in the bottom panel, so it is added once that panel exists.\n"
      "\teditor_dock_manager->add_dock(filesystem_dock);\n\n\tlog = memnew(EditorLog);")
+
+# ---- Stage 2: structure ----------------------------------------------------------------------------------------------------------------
+N = "editor/editor_node.cpp"
+# 2D / 3D / Script / Game / Asset Store buttons: from the middle of the title bar to a tab strip above the viewport
+edit(N, "\ttitle_bar->add_child(main_editor_button_hb);\n\ttitle_bar->set_center_control(main_editor_button_hb);\n",
+     "\t// BlockComet: the screen buttons form a tab strip above the viewport instead of sitting in the title bar.\n"
+     "\tNode *main_screen_parent = editor_main_screen->get_parent();\n"
+     "\tmain_screen_parent->add_child(main_editor_button_hb);\n"
+     "\tmain_screen_parent->move_child(main_editor_button_hb, editor_main_screen->get_index());\n")
+# Play / Pause / Stop in the middle of the title bar
+edit(N, "\ttitle_bar->add_child(project_run_bar);\n",
+     "\ttitle_bar->add_child(project_run_bar);\n"
+     "\t// BlockComet: the run controls are the centre of the title bar.\n"
+     "\ttitle_bar->move_child(project_run_bar, right_spacer->get_index());\n"
+     "\ttitle_bar->set_center_control(project_run_bar);\n")
+# the Project / Console panel is open from the first start
+edit(N, "\t\t\tbottom_panel->load_layout_from_config(default_layout, EDITOR_NODE_CONFIG_SECTION);\n",
+     "\t\t\tbottom_panel->load_layout_from_config(default_layout, EDITOR_NODE_CONFIG_SECTION);\n"
+     "\t\t\tbottom_panel->make_item_visible(filesystem_dock);\n")
+# names of the panels
+edit("editor/docks/scene_tree_dock.cpp", 'set_name(TTRC("Scene"));', 'set_name(TTRC("Hierarchy"));')
+edit("editor/docks/filesystem_dock.cpp", 'set_name(TTRC("FileSystem"));', 'set_name(TTRC("Project"));')
+edit("editor/editor_log.cpp", 'set_name(TTRC("Output"));', 'set_name(TTRC("Console"));')
+# the left column is only the Hierarchy: Import and History go under the Inspector
+edit("editor/docks/import_dock.cpp", "set_default_slot(EditorDock::DOCK_SLOT_LEFT_UR);", "set_default_slot(EditorDock::DOCK_SLOT_RIGHT_BL);")
+edit("editor/docks/history_dock.cpp", "set_default_slot(EditorDock::DOCK_SLOT_LEFT_BR);", "set_default_slot(EditorDock::DOCK_SLOT_RIGHT_BL);")
 
 # ---- branding images -------------------------------------------------------------------------------------------------------------------
 shutil.copy(os.path.join(assets, "splash.png"), os.path.join(root, "main", "splash.png"))
