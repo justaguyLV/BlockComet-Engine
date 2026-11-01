@@ -70,9 +70,19 @@ edit(N, "\ttitle_bar->add_child(project_run_bar);\n",
      "\ttitle_bar->move_child(project_run_bar, right_spacer->get_index());\n"
      "\ttitle_bar->set_center_control(project_run_bar);\n")
 # the Project / Console panel is open from the first start
+edit(N, "EditorNode *EditorNode::singleton = nullptr;\n",
+     "EditorNode *EditorNode::singleton = nullptr;\n\n"
+     "// BlockComet: set on the first start (no saved layout) so that the Project panel opens once the editor is ready.\n"
+     "static bool g_blockcomet_open_project = false;\n")
 edit(N, "\t\t\tbottom_panel->load_layout_from_config(default_layout, EDITOR_NODE_CONFIG_SECTION);\n",
      "\t\t\tbottom_panel->load_layout_from_config(default_layout, EDITOR_NODE_CONFIG_SECTION);\n"
-     "\t\t\tbottom_panel->make_item_visible(FileSystemDock::get_singleton());\n")
+     "\t\t\tg_blockcomet_open_project = true;\n")
+edit(N, "\t\tcase NOTIFICATION_READY: {\n",
+     "\t\tcase NOTIFICATION_READY: {\n"
+     "\t\t\tif (g_blockcomet_open_project) {\n"
+     "\t\t\t\tg_blockcomet_open_project = false;\n"
+     "\t\t\t\tcallable_mp_lambda(this, [this]() { bottom_panel->make_item_visible(FileSystemDock::get_singleton()); }).call_deferred();\n"
+     "\t\t\t}\n")
 # names of the panels
 edit("editor/docks/scene_tree_dock.cpp", 'set_name(TTRC("Scene"));', 'set_name(TTRC("Hierarchy"));')
 edit("editor/docks/filesystem_dock.cpp", 'set_name(TTRC("FileSystem"));', 'set_name(TTRC("Project"));')
