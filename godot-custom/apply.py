@@ -81,7 +81,7 @@ edit(N, "\t\tcase NOTIFICATION_READY: {\n",
      "\t\tcase NOTIFICATION_READY: {\n"
      "\t\t\tif (g_blockcomet_open_project) {\n"
      "\t\t\t\tg_blockcomet_open_project = false;\n"
-     "\t\t\t\tcallable_mp_lambda(this, [this]() { bottom_panel->make_item_visible(FileSystemDock::get_singleton()); }).call_deferred();\n"
+     "\t\t\t\tcallable_mp(bottom_panel, &EditorBottomPanel::make_item_visible).call_deferred(FileSystemDock::get_singleton(), true, false);\n"
      "\t\t\t}\n")
 # names of the panels
 edit("editor/docks/scene_tree_dock.cpp", 'set_name(TTRC("Scene"));', 'set_name(TTRC("Hierarchy"));')
