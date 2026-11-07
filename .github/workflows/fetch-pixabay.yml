@@ -21,7 +21,6 @@ jobs:
       - name: Search Pixabay
         run: |
           curl -s "https://pixabay.com/api/videos/?key=${{ github.event.inputs.pixabay_key }}&q=${{ github.event.inputs.query }}&per_page=20" -o results.json
-          echo "---- results.json ----"
           cat results.json
 
       - name: Pick best video URL(s)
@@ -56,15 +55,31 @@ jobs:
           ls -la downloaded || true
           echo "COUNT=$i" >> $GITHUB_ENV
 
-      - name: Upload as release
+      - name: Upload as release (debug-safe)
         run: |
-          gh release create "pixabay-run-${{ github.run_id }}" \
-            --title "Pixabay fetch ${{ github.run_id }}" \
-            --notes "query=${{ github.event.inputs.query }} count=${COUNT}" \
-            results.json video_urls.txt downloaded/* 2>&1 || \
-          gh release create "pixabay-run-${{ github.run_id }}" \
-            --title "Pixabay fetch ${{ github.run_id }} (no videos)" \
-            --notes "No results or download failed. query=${{ github.event.inputs.query }}" \
-            results.json video_urls.txt
+          set +e
+          {
+            echo "=== whoami/gh auth ==="
+            gh auth status
+            echo "=== ls downloaded ==="
+            ls -la downloaded
+            echo "=== release create attempt ==="
+            gh release create "pixabay-run-${{ github.run_id }}" \
+              --title "Pixabay fetch ${{ github.run_id }}" \
+              --notes "query=${{ github.event.inputs.query }} count=${COUNT}" \
+              results.json video_urls.txt downloaded/*
+            echo "EXIT_CODE=$?"
+          } > upload_log.txt 2>&1
+          cat upload_log.txt
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Always upload debug log as release
+        if: always()
+        run: |
+          gh release create "debug-${{ github.run_id }}" \
+            --title "DEBUG ${{ github.run_id }}" \
+            --notes "debug log attached" \
+            upload_log.txt results.json video_urls.txt 2>&1 | tee debug2.txt || true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
