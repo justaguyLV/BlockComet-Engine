@@ -1,0 +1,70 @@
+name: Fetch Pixabay Video
+
+on:
+  workflow_dispatch:
+    inputs:
+      query:
+        description: 'Pixabay search query'
+        required: true
+        default: 'minecraft'
+      pixabay_key:
+        description: 'Pixabay API key'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Search Pixabay
+        run: |
+          curl -s "https://pixabay.com/api/videos/?key=${{ github.event.inputs.pixabay_key }}&q=${{ github.event.inputs.query }}&per_page=20" -o results.json
+          echo "---- results.json ----"
+          cat results.json
+
+      - name: Pick best video URL(s)
+        run: |
+          python3 -c "
+          import json
+          d = json.load(open('results.json'))
+          hits = d.get('hits', [])
+          print('TOTAL_HITS', len(hits))
+          urls = []
+          for h in hits[:5]:
+              v = h.get('videos', {})
+              url = v.get('large',{}).get('url') or v.get('medium',{}).get('url') or v.get('small',{}).get('url')
+              if url:
+                  urls.append(url)
+          with open('video_urls.txt','w') as f:
+              f.write('\n'.join(urls))
+          print('PICKED', len(urls), 'urls')
+          "
+          cat video_urls.txt
+
+      - name: Download videos
+        run: |
+          mkdir -p downloaded
+          i=0
+          if [ -s video_urls.txt ]; then
+            while IFS= read -r url; do
+              i=$((i+1))
+              curl -L "$url" -o "downloaded/pixabay_${i}.mp4"
+            done < video_urls.txt
+          fi
+          ls -la downloaded || true
+          echo "COUNT=$i" >> $GITHUB_ENV
+
+      - name: Upload as release
+        run: |
+          gh release create "pixabay-run-${{ github.run_id }}" \
+            --title "Pixabay fetch ${{ github.run_id }}" \
+            --notes "query=${{ github.event.inputs.query }} count=${COUNT}" \
+            results.json video_urls.txt downloaded/* 2>&1 || \
+          gh release create "pixabay-run-${{ github.run_id }}" \
+            --title "Pixabay fetch ${{ github.run_id }} (no videos)" \
+            --notes "No results or download failed. query=${{ github.event.inputs.query }}" \
+            results.json video_urls.txt
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
