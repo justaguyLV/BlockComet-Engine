@@ -18,6 +18,8 @@ jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Search Pixabay
         run: |
           curl -s "https://pixabay.com/api/videos/?key=${{ github.event.inputs.pixabay_key }}&q=${{ github.event.inputs.query }}&per_page=20" -o results.json
@@ -55,11 +57,11 @@ jobs:
           ls -la downloaded || true
           echo "COUNT=$i" >> $GITHUB_ENV
 
-      - name: Upload as release (debug-safe)
+      - name: Try release upload (log result)
         run: |
           set +e
           {
-            echo "=== whoami/gh auth ==="
+            echo "=== gh auth status ==="
             gh auth status
             echo "=== ls downloaded ==="
             ls -la downloaded
@@ -74,12 +76,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Always upload debug log as release
+      - name: Commit debug artifacts to repo (fallback channel)
         if: always()
         run: |
-          gh release create "debug-${{ github.run_id }}" \
-            --title "DEBUG ${{ github.run_id }}" \
-            --notes "debug log attached" \
-            upload_log.txt results.json video_urls.txt 2>&1 | tee debug2.txt || true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          mkdir -p debug-runs/${{ github.run_id }}
+          cp upload_log.txt debug-runs/${{ github.run_id }}/ 2>/dev/null || true
+          cp results.json debug-runs/${{ github.run_id }}/ 2>/dev/null || true
+          cp video_urls.txt debug-runs/${{ github.run_id }}/ 2>/dev/null || true
+          ls downloaded 2>/dev/null > debug-runs/${{ github.run_id }}/downloaded_listing.txt || true
+          git config user.name "actions-bot"
+          git config user.email "actions@github.com"
+          git add debug-runs/${{ github.run_id }}
+          git commit -m "debug run ${{ github.run_id }}" || echo "nothing to commit"
+          git push || echo "push failed"
