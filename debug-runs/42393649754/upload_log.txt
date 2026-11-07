@@ -1,0 +1,17 @@
+=== gh auth status ===
+github.com
+  ✓ Logged in to github.com account github-actions[bot] (GH_TOKEN)
+  - Active account: true
+  - Git operations protocol: https
+  - Token: ghs_*************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************
+=== ls downloaded ===
+total 36084
+drwxr-xr-x 2 runner runner     4096 Nov  7 16:54 .
+drwxr-xr-x 6 runner runner     4096 Nov  7 16:54 ..
+-rw-r--r-- 1 runner runner 12873767 Nov  7 16:54 pixabay_1.mp4
+-rw-r--r-- 1 runner runner  3957336 Nov  7 16:54 pixabay_2.mp4
+-rw-r--r-- 1 runner runner  3556011 Nov  7 16:54 pixabay_3.mp4
+-rw-r--r-- 1 runner runner 16542444 Nov  7 16:54 pixabay_4.mp4
+=== release create attempt ===
+https://github.com/justaguyLV/BlockComet-Engine/releases/tag/pixabay-run-42393649754
+EXIT_CODE=0
